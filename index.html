@@ -22,7 +22,7 @@
 				
 				<div id="cms-content">
 
-<form name="patform" method="post">
+<form name="patform" method="post" id="patform">
 
 
 <div class="row" id="login-panel">
@@ -31,7 +31,7 @@
 <div class="span2 cms-chunk-html" id="gvsu-login">
 <fieldset>
 <legend id="login-heading">GVSU Users:</legend>
-
+<span id="user-error"></span>
 <label for="extpatid" id="userLabel"><abbr title="Grand Valley State University">GVSU</abbr> Username:</label>
 <input name="extpatid" id="extpatid" type="text" />
 
@@ -173,7 +173,7 @@ hr {
 <script>
 
 // This script helps reformat the login screen for usability
-var visitorUser = 'name', visitorPass = 'code', gvsuUser = 'extpatid', gvsuPass = 'extpatpw';
+var visitorUser = 'name', visitorPass = 'code', gvsuUser = 'extpatid', gvsuPass = 'extpatpw', gNo;
 var loginPanel = document.getElementById('login-panel');
 var loginHeading = document.getElementById('login-heading');
 
@@ -249,7 +249,66 @@ alumnToggle.addEventListener('mousedown',function() {
 });
 loginPanel.appendChild(alumnToggle);
 
-// 
+// Check for possible G#s in the username field
+document.getElementById('extpatid').addEventListener('keyup', function() {
+	//console.log('Testing input...' + this.value);
+	if((this).value.length > 2) {
+		var subslice = this.value.substr(0,3);
+
+		console.log('Testing against regex...');
+
+		var p = new RegExp('(G)([0-9]+)','i');
+		if(p.exec(subslice) != null) {
+			console.log('This looks like a G Number');
+			document.getElementById('user-error').innerHTML = '<div class="alert alert-danger">Log in with your GVSU Blackboard ID, not your G Number.</div>';
+		} else {
+			console.log('Not a G Number');
+		}
+	}
+});
+
+// Check for possible barcodes in the password field.
+document.getElementById(gvsuPass).addEventListener('keyup', function(e) {
+	if(this.value.length > 5) {
+		var passString = this.value.substr(0, 5);
+		var p2 = new RegExp('([0-9]{5})');
+		if(p2.exec(passString) != null) {
+			if(passString == '22260' || passString == '32260') {
+				console.log('This looks like a visitor or Alumni barcode');
+				document.getElementById('user-error').innerHTML = '<div class="alert alert-danger">This looks like a visitor or alumni login. <a href="#" id="error-toggle">Switch to the visitor or alumni login page</a>.</div>';
+
+				document.getElementById('error-toggle').addEventListener('mousedown', function(e) {
+					e.preventDefault();
+					document.getElementById('gvsu-login').id = 'visitor-login';
+					// Switch the input fields
+					document.getElementById(gvsuUser).name = visitorUser;
+					document.getElementById(gvsuUser).id = visitorUser;
+					document.getElementById(gvsuPass).name = visitorPass;
+					document.getElementById(gvsuPass).id = visitorPass;
+					document.getElementById('submit').value = 'Visitor & Alumni Log In';
+					// Switch the labels
+					document.getElementById('userLabel').innerHTML = 'Your Last Name:';
+					document.getElementById('userLabel').setAttribute('for', visitorUser);
+					document.getElementById('pwLabel').innerHTML = 'Your Library Barcode:';
+					document.getElementById('pwLabel').setAttribute('for', visitorPass);
+					document.getElementById('forgot-pw').style.display = 'none';
+					barcodeHelp.style.display = 'block';
+
+					// Switch the heading
+					loginHeading.innerHTML = 'Visitor &amp; Alumni:';
+					loginHeading.style.backgroundColor = '#ddd';
+					loginHeading.style.color = '#333';
+					// Switch the toggle
+					document.getElementById('toggle').innerHTML = 'GVSU User Log In';
+					document.getElementById('user-error').style.display = 'none';
+
+				});
+			} 
+		}
+	}
+});
+
+
 
 </script>
 </body>
